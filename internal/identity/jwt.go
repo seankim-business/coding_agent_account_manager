@@ -13,6 +13,14 @@ import (
 
 var errInvalidJWT = errors.New("invalid jwt")
 
+// nestedClaimNamespaces lists JWT claim keys whose values are nested objects
+// that may contain identity fields. OpenAI/Codex tokens store plan_type and
+// other metadata under "https://api.openai.com/auth".
+var nestedClaimNamespaces = []string{
+	"https://api.openai.com/auth",
+	"https://api.openai.com/profile",
+}
+
 // ExtractFromJWT parses a JWT token and extracts identity claims without
 // validating the signature.
 func ExtractFromJWT(token string) (*Identity, error) {
@@ -24,7 +32,7 @@ func ExtractFromJWT(token string) (*Identity, error) {
 	identity := &Identity{
 		Email:        extractEmailClaim(claims),
 		Organization: pickString(claims, "organization", "org", "org_name"),
-		PlanType:     pickString(claims, "plan_type", "subscription_type", "planType", "subscriptionType", "plan"),
+		PlanType:     pickString(claims, "plan_type", "chatgpt_plan_type", "subscription_type", "planType", "subscriptionType", "plan"),
 		AccountID:    pickString(claims, "account_id", "accountId", "user_id", "userId", "uid"),
 	}
 
@@ -88,12 +96,14 @@ func addBase64Padding(s string) string {
 
 func extractEmailClaim(claims map[string]interface{}) string {
 	emailFields := []string{"email", "preferred_username", "upn", "sub"}
-	for _, field := range emailFields {
-		if value := valueAsString(claims[field]); value != "" {
-			if field == "sub" && !strings.Contains(value, "@") {
-				continue
+	for _, claimMap := range collectClaimMaps(claims) {
+		for _, field := range emailFields {
+			if value := valueAsString(claimMap[field]); value != "" {
+				if field == "sub" && !strings.Contains(value, "@") {
+					continue
+				}
+				return value
 			}
-			return value
 		}
 	}
 	return ""
@@ -132,12 +142,30 @@ func extractExpiry(claims map[string]interface{}) (time.Time, bool) {
 }
 
 func pickString(claims map[string]interface{}, keys ...string) string {
-	for _, key := range keys {
-		if value := valueAsString(claims[key]); value != "" {
-			return value
+	for _, claimMap := range collectClaimMaps(claims) {
+		for _, key := range keys {
+			if value := valueAsString(claimMap[key]); value != "" {
+				return value
+			}
 		}
 	}
 	return ""
+}
+
+// collectClaimMaps returns the top-level claims map followed by any nested
+// namespace maps found under known provider-specific keys. This allows
+// pickString and extractEmailClaim to find values regardless of whether a
+// provider places them at the top level or inside a namespace object.
+func collectClaimMaps(claims map[string]interface{}) []map[string]interface{} {
+	maps := []map[string]interface{}{claims}
+	for _, ns := range nestedClaimNamespaces {
+		if raw, ok := claims[ns]; ok {
+			if nested, ok := raw.(map[string]interface{}); ok {
+				maps = append(maps, nested)
+			}
+		}
+	}
+	return maps
 }
 
 func valueAsString(value interface{}) string {

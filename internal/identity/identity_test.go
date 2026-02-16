@@ -98,6 +98,74 @@ func TestExtractFromJWT_UnknownClaims(t *testing.T) {
 	}
 }
 
+func TestExtractFromJWT_NestedOpenAIClaims(t *testing.T) {
+	// Simulates a real Codex/OpenAI JWT where plan type is nested under
+	// the "https://api.openai.com/auth" namespace claim.
+	payload := map[string]interface{}{
+		"sub": "user-abc",
+		"exp": time.Now().Add(1 * time.Hour).Unix(),
+		"https://api.openai.com/auth": map[string]interface{}{
+			"chatgpt_plan_type": "plus",
+			"user_id":           "uid-456",
+		},
+	}
+	token := buildJWT(t, payload)
+
+	identity, err := ExtractFromJWT(token)
+	if err != nil {
+		t.Fatalf("ExtractFromJWT error: %v", err)
+	}
+	if identity.PlanType != "plus" {
+		t.Errorf("PlanType = %q, want %q", identity.PlanType, "plus")
+	}
+	if identity.AccountID != "uid-456" {
+		t.Errorf("AccountID = %q, want %q", identity.AccountID, "uid-456")
+	}
+}
+
+func TestExtractFromJWT_NestedEmailClaim(t *testing.T) {
+	// Email only present inside a nested namespace.
+	payload := map[string]interface{}{
+		"sub": "non-email-sub",
+		"https://api.openai.com/profile": map[string]interface{}{
+			"email": "openai-user@example.com",
+		},
+	}
+	token := buildJWT(t, payload)
+
+	identity, err := ExtractFromJWT(token)
+	if err != nil {
+		t.Fatalf("ExtractFromJWT error: %v", err)
+	}
+	if identity.Email != "openai-user@example.com" {
+		t.Errorf("Email = %q, want %q", identity.Email, "openai-user@example.com")
+	}
+}
+
+func TestExtractFromJWT_TopLevelTakesPrecedenceOverNested(t *testing.T) {
+	// When a claim exists at both top-level and nested, top-level wins.
+	payload := map[string]interface{}{
+		"email":     "top-level@example.com",
+		"plan_type": "enterprise",
+		"https://api.openai.com/auth": map[string]interface{}{
+			"email":             "nested@example.com",
+			"chatgpt_plan_type": "plus",
+		},
+	}
+	token := buildJWT(t, payload)
+
+	identity, err := ExtractFromJWT(token)
+	if err != nil {
+		t.Fatalf("ExtractFromJWT error: %v", err)
+	}
+	if identity.Email != "top-level@example.com" {
+		t.Errorf("Email = %q, want %q", identity.Email, "top-level@example.com")
+	}
+	if identity.PlanType != "enterprise" {
+		t.Errorf("PlanType = %q, want %q", identity.PlanType, "enterprise")
+	}
+}
+
 func TestExtractFromCodexAuth_TopLevelToken(t *testing.T) {
 	token := buildJWT(t, map[string]interface{}{"email": "codex@example.com"})
 	path := writeAuthFile(t, map[string]interface{}{
@@ -248,6 +316,28 @@ func TestFixture_CodexNestedTokens(t *testing.T) {
 	}
 	if identity.PlanType != "max" {
 		t.Errorf("PlanType = %q, want %q", identity.PlanType, "max")
+	}
+}
+
+func TestFixture_CodexOpenAINestedClaims(t *testing.T) {
+	// Tests the real-world Codex/OpenAI JWT structure where plan type is
+	// nested under "https://api.openai.com/auth" -> "chatgpt_plan_type".
+	identity, err := ExtractFromCodexAuth("testdata/codex_openai_nested_claims.json")
+	if err != nil {
+		t.Fatalf("ExtractFromCodexAuth error: %v", err)
+	}
+
+	if identity.Provider != "codex" {
+		t.Errorf("Provider = %q, want %q", identity.Provider, "codex")
+	}
+	if identity.Email != "codex-nested-only@example.com" {
+		t.Errorf("Email = %q, want %q", identity.Email, "codex-nested-only@example.com")
+	}
+	if identity.PlanType != "plus" {
+		t.Errorf("PlanType = %q, want %q (should extract from nested https://api.openai.com/auth claim)", identity.PlanType, "plus")
+	}
+	if identity.AccountID != "uid-nested-only" {
+		t.Errorf("AccountID = %q, want %q (should extract from nested https://api.openai.com/auth claim)", identity.AccountID, "uid-nested-only")
 	}
 }
 
