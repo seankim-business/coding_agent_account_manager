@@ -64,7 +64,7 @@ func NewWatcher(vault *authfile.Vault, config WatcherConfig) (*Watcher, error) {
 		config.Logger = slog.Default()
 	}
 	if len(config.Providers) == 0 {
-		config.Providers = []string{"claude", "codex", "gemini"}
+		config.Providers = []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	}
 
 	fsWatcher, err := fsnotify.NewWatcher()
@@ -492,6 +492,18 @@ func (w *Watcher) extractIdentity(provider, path string) (*identity.Identity, er
 		}
 		return nil, fmt.Errorf("gemini config not found")
 
+	case "opencode":
+		if strings.HasSuffix(path, "auth.json") {
+			return identity.ExtractFromGenericAuth(path)
+		}
+		return nil, fmt.Errorf("opencode auth not found")
+
+	case "cursor":
+		if strings.HasSuffix(path, "auth.json") || strings.HasSuffix(path, "settings.json") {
+			return identity.ExtractFromGenericAuth(path)
+		}
+		return nil, fmt.Errorf("cursor auth not found")
+
 	default:
 		return nil, fmt.Errorf("unknown provider: %s", provider)
 	}
@@ -501,7 +513,7 @@ func (w *Watcher) extractIdentity(provider, path string) (*identity.Identity, er
 // This is useful for discovering accounts that were logged in before the watcher started.
 func WatchOnce(vault *authfile.Vault, providers []string, logger *slog.Logger) ([]string, error) {
 	if len(providers) == 0 {
-		providers = []string{"claude", "codex", "gemini"}
+		providers = []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	}
 	if logger == nil {
 		logger = slog.Default()
@@ -564,6 +576,20 @@ func WatchOnce(vault *authfile.Vault, providers []string, logger *slog.Logger) (
 			}
 			settingsPath := filepath.Join(geminiHome, "settings.json")
 			ident, err = identity.ExtractFromGeminiConfig(settingsPath)
+		case "opencode":
+			for _, spec := range fileSet.Files {
+				if spec.Required {
+					ident, err = identity.ExtractFromGenericAuth(spec.Path)
+					break
+				}
+			}
+		case "cursor":
+			for _, spec := range fileSet.Files {
+				ident, err = identity.ExtractFromGenericAuth(spec.Path)
+				if err == nil && ident != nil {
+					break
+				}
+			}
 		}
 
 		if err != nil {

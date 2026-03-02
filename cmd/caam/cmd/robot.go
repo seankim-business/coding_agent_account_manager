@@ -293,16 +293,16 @@ func runRobotStatus(cmd *cobra.Command, args []string) error {
 	includeCoords, _ := cmd.Flags().GetBool("include-coordinators")
 
 	// Determine which providers to check
-	providersToCheck := []string{"codex", "claude", "gemini"}
+	providersToCheck := []string{"codex", "claude", "gemini", "opencode", "cursor"}
 	if len(args) > 0 {
 		providerFilter = strings.ToLower(args[0])
 	}
 	if providerFilter != "" {
-		validProviders := map[string]bool{"codex": true, "claude": true, "gemini": true}
+		validProviders := map[string]bool{"codex": true, "claude": true, "gemini": true, "opencode": true, "cursor": true}
 		if !validProviders[providerFilter] {
 			return robotError(cmd, "status", "INVALID_PROVIDER",
 				fmt.Sprintf("unknown provider: %s", providerFilter),
-				"valid providers: codex, claude, gemini",
+				"valid providers: codex, claude, gemini, opencode, cursor",
 				[]string{"caam robot status claude", "caam robot status codex", "caam robot status gemini"})
 		}
 		providersToCheck = []string{providerFilter}

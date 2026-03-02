@@ -89,7 +89,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get all profiles
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	for _, provider := range providers {
 		if toolFilter != "" && provider != toolFilter {
 			continue

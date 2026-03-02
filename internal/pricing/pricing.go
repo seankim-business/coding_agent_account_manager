@@ -61,6 +61,9 @@ func PriceFor(provider, model string) (TokenPrice, bool) {
 	case "gemini":
 		price, ok := GeminiPricing[normalized]
 		return price, ok
+	case "opencode", "cursor":
+		// Pricing not yet available for these providers
+		return TokenPrice{}, false
 	default:
 		return TokenPrice{}, false
 	}
@@ -191,6 +194,8 @@ func normalizeModelForProvider(provider, model string) string {
 		if alias, ok := geminiAliases[normalized]; ok {
 			return alias
 		}
+	case "opencode", "cursor":
+		// No model aliases for these providers yet
 	}
 	return normalized
 }

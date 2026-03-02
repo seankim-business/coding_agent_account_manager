@@ -87,7 +87,7 @@ func WithAuthPool(pool *authpool.AuthPool) MonitorOption {
 func NewMonitor(opts ...MonitorOption) *Monitor {
 	m := &Monitor{
 		interval:  30 * time.Second,
-		providers: []string{"claude", "codex", "gemini"},
+		providers: []string{"claude", "codex", "gemini", "opencode", "cursor"},
 		fetcher:   usage.NewMultiProfileFetcher(),
 		vault:     authfile.NewVault(authfile.DefaultVaultPath()),
 		health:    health.NewStorage(""),
@@ -308,6 +308,8 @@ func (m *Monitor) readAccessToken(provider, name string) (string, error) {
 		authPath := filepath.Join(m.vault.ProfilePath(provider, name), "auth.json")
 		token, _, err := usage.ReadCodexCredentials(authPath)
 		return token, err
+	case "opencode", "cursor":
+		return "", fmt.Errorf("usage fetch not yet supported for provider %s", provider)
 	default:
 		return "", fmt.Errorf("usage fetch unsupported for provider %s", provider)
 	}

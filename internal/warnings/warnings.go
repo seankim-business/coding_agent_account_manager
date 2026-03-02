@@ -146,6 +146,9 @@ func (c *Checker) checkVaultProfile(ctx context.Context, tool, profileName strin
 		// Migrate legacy vault filename before reading.
 		_ = authfile.MigrateGeminiVaultDir(vaultPath)
 		expInfo, err = health.ParseGeminiExpiry(vaultPath)
+	case "opencode", "cursor":
+		// No token expiry parsing for these providers yet
+		return warnings
 	}
 
 	if err != nil || expInfo == nil || expInfo.ExpiresAt.IsZero() {

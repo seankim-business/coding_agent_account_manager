@@ -225,19 +225,11 @@ func suggestProfileName(auth discovery.DiscoveredAuth) string {
 }
 
 func getAuthFileSetForTool(tool string) *authfile.AuthFileSet {
-	switch tool {
-	case "claude":
-		set := authfile.ClaudeAuthFiles()
-		return &set
-	case "codex":
-		set := authfile.CodexAuthFiles()
-		return &set
-	case "gemini":
-		set := authfile.GeminiAuthFiles()
-		return &set
-	default:
+	set, ok := authfile.GetAuthFileSet(tool)
+	if !ok {
 		return nil
 	}
+	return &set
 }
 
 func setupShellIntegration() {

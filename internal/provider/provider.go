@@ -208,6 +208,18 @@ var providerMetaRegistry = map[string]ProviderMeta{
 		AccountURL:  "https://aistudio.google.com/",
 		Description: "Google AI Studio dashboard",
 	},
+	"opencode": {
+		ID:          "opencode",
+		DisplayName: "OpenCode",
+		AccountURL:  "https://opencode.ai/",
+		Description: "OpenCode dashboard",
+	},
+	"cursor": {
+		ID:          "cursor",
+		DisplayName: "Cursor",
+		AccountURL:  "https://cursor.com/settings",
+		Description: "Cursor account settings",
+	},
 }
 
 // GetProviderMeta returns metadata for a provider by ID.

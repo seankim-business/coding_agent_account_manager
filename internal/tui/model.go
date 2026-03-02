@@ -202,7 +202,7 @@ type Model struct {
 
 // DefaultProviders returns the default list of provider names.
 func DefaultProviders() []string {
-	return []string{"claude", "codex", "gemini"}
+	return []string{"claude", "codex", "gemini", "opencode", "cursor"}
 }
 
 // New creates a new TUI model with default settings.
@@ -495,16 +495,7 @@ func (m Model) loadProfiles() tea.Msg {
 }
 
 func authFileSetForProvider(provider string) (authfile.AuthFileSet, bool) {
-	switch provider {
-	case "codex":
-		return authfile.CodexAuthFiles(), true
-	case "claude":
-		return authfile.ClaudeAuthFiles(), true
-	case "gemini":
-		return authfile.GeminiAuthFiles(), true
-	default:
-		return authfile.AuthFileSet{}, false
-	}
+	return authfile.GetAuthFileSet(provider)
 }
 
 // profilesLoadedMsg is sent when profiles are loaded.
@@ -2058,6 +2049,13 @@ func vaultIdentityEmail(provider, profileDir string) string {
 		id, _ = identity.ExtractFromGeminiConfig(filepath.Join(profileDir, "settings.json"))
 		if id == nil {
 			id, _ = identity.ExtractFromGeminiConfig(filepath.Join(profileDir, "oauth_creds.json"))
+		}
+	case "opencode":
+		id, _ = identity.ExtractFromGenericAuth(filepath.Join(profileDir, "auth.json"))
+	case "cursor":
+		id, _ = identity.ExtractFromGenericAuth(filepath.Join(profileDir, "auth.json"))
+		if id == nil {
+			id, _ = identity.ExtractFromGenericAuth(filepath.Join(profileDir, "settings.json"))
 		}
 	}
 	if id == nil {

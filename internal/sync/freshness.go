@@ -76,6 +76,8 @@ func GetExtractor(provider string) FreshnessExtractor {
 		return &CodexFreshnessExtractor{}
 	case "gemini":
 		return &GeminiFreshnessExtractor{}
+	case "opencode", "cursor":
+		return &GenericFreshnessExtractor{}
 	default:
 		return nil
 	}
@@ -352,6 +354,35 @@ func (e *GeminiFreshnessExtractor) Extract(provider, profile string, authFiles m
 // containsPath checks if the path ends with the given filename.
 // It properly handles path separators to avoid false positives like
 // matching "auth.json.backup" when looking for "auth.json".
+// GenericFreshnessExtractor extracts freshness from generic auth files (OpenCode, Cursor).
+// Since we don't know the token format, we use file modification time as the freshness signal.
+type GenericFreshnessExtractor struct{}
+
+// Extract implements FreshnessExtractor for generic providers.
+func (e *GenericFreshnessExtractor) Extract(provider, profile string, authFiles map[string][]byte) (*TokenFreshness, error) {
+	freshness := &TokenFreshness{
+		Provider: provider,
+		Profile:  profile,
+	}
+
+	// Use the latest modification time across all auth files
+	for path := range authFiles {
+		info, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		if info.ModTime().After(freshness.ModifiedAt) {
+			freshness.ModifiedAt = info.ModTime()
+		}
+	}
+
+	if freshness.ModifiedAt.IsZero() {
+		return nil, fmt.Errorf("no valid auth files found")
+	}
+
+	return freshness, nil
+}
+
 func containsPath(path, filename string) bool {
 	if len(path) < len(filename) {
 		return false

@@ -279,6 +279,10 @@ func ProviderFromString(s string) Provider {
 		return ProviderCodex
 	case "gemini":
 		return ProviderGemini
+	case "opencode", "cursor":
+		// These providers don't have specific rate-limit detection yet;
+		// default to Claude patterns as a reasonable fallback.
+		return ProviderClaude
 	default:
 		return ProviderClaude
 	}

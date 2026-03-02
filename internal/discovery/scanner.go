@@ -16,14 +16,16 @@ import (
 type Tool string
 
 const (
-	ToolClaude Tool = "claude"
-	ToolCodex  Tool = "codex"
-	ToolGemini Tool = "gemini"
+	ToolClaude   Tool = "claude"
+	ToolCodex    Tool = "codex"
+	ToolGemini   Tool = "gemini"
+	ToolOpenCode Tool = "opencode"
+	ToolCursor   Tool = "cursor"
 )
 
 // AllTools returns all supported tools.
 func AllTools() []Tool {
-	return []Tool{ToolClaude, ToolCodex, ToolGemini}
+	return []Tool{ToolClaude, ToolCodex, ToolGemini, ToolOpenCode, ToolCursor}
 }
 
 // DiscoveredAuth represents an existing auth session found on the system.
@@ -122,6 +124,12 @@ func getAuthFileSet(tool Tool) *authfile.AuthFileSet {
 		return &set
 	case ToolGemini:
 		set := authfile.GeminiAuthFiles()
+		return &set
+	case ToolOpenCode:
+		set := authfile.OpenCodeAuthFiles()
+		return &set
+	case ToolCursor:
+		set := authfile.CursorAuthFiles()
 		return &set
 	default:
 		return nil

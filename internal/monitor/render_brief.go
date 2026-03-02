@@ -24,7 +24,7 @@ func (r *BriefRenderer) Render(state *MonitorState) string {
 		}
 	}
 
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	parts := make([]string, 0, len(providers))
 	for _, prov := range providers {
 		p := byProvider[prov]

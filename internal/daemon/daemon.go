@@ -601,7 +601,7 @@ func (d *Daemon) checkAndRefresh() {
 		d.logger.Println("Checking profiles for refresh...")
 	}
 
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	var totalChecked int64
 
 	// Use a semaphore to limit concurrency
@@ -710,6 +710,9 @@ func (d *Daemon) getProfileHealth(provider, profile string) *health.ProfileHealt
 		// Migrate legacy vault filename before reading.
 		_ = authfile.MigrateGeminiVaultDir(vaultPath)
 		expiryInfo, err = health.ParseGeminiExpiry(vaultPath)
+	case "opencode", "cursor":
+		// No token expiry parsing for these providers yet
+		return nil
 	}
 
 	if err != nil || expiryInfo == nil {

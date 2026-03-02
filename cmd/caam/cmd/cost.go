@@ -515,7 +515,7 @@ func runCostTokens(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		providers = []string{strings.ToLower(args[0])}
 	} else {
-		providers = []string{"claude", "codex", "gemini"}
+		providers = []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

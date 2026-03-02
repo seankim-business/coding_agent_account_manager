@@ -157,6 +157,54 @@ func GeminiAuthFiles() AuthFileSet {
 	}
 }
 
+// OpenCodeAuthFiles returns the auth files for OpenCode.
+// OpenCode stores auth in $XDG_DATA_HOME/opencode/auth.json (default ~/.local/share/opencode/auth.json).
+func OpenCodeAuthFiles() AuthFileSet {
+	homeDir, _ := os.UserHomeDir()
+
+	dataHome := os.Getenv("XDG_DATA_HOME")
+	if dataHome == "" {
+		dataHome = filepath.Join(homeDir, ".local", "share")
+	}
+
+	return AuthFileSet{
+		Tool: "opencode",
+		Files: []AuthFileSpec{
+			{
+				Tool:        "opencode",
+				Path:        filepath.Join(dataHome, "opencode", "auth.json"),
+				Description: "OpenCode auth credentials",
+				Required:    true,
+			},
+		},
+	}
+}
+
+// CursorAuthFiles returns the auth files for Cursor CLI.
+// Cursor stores config in ~/.cursor/ directory.
+func CursorAuthFiles() AuthFileSet {
+	homeDir, _ := os.UserHomeDir()
+
+	return AuthFileSet{
+		Tool: "cursor",
+		Files: []AuthFileSpec{
+			{
+				Tool:        "cursor",
+				Path:        filepath.Join(homeDir, ".cursor", "auth.json"),
+				Description: "Cursor CLI auth credentials",
+				Required:    false,
+			},
+			{
+				Tool:        "cursor",
+				Path:        filepath.Join(homeDir, ".cursor", "settings.json"),
+				Description: "Cursor CLI settings",
+				Required:    false,
+			},
+		},
+		AllowOptionalOnly: true,
+	}
+}
+
 // GetAuthFileSet returns the AuthFileSet for the given provider name.
 func GetAuthFileSet(provider string) (AuthFileSet, bool) {
 	switch strings.ToLower(provider) {
@@ -166,6 +214,10 @@ func GetAuthFileSet(provider string) (AuthFileSet, bool) {
 		return CodexAuthFiles(), true
 	case "gemini":
 		return GeminiAuthFiles(), true
+	case "opencode", "oc":
+		return OpenCodeAuthFiles(), true
+	case "cursor", "cur":
+		return CursorAuthFiles(), true
 	default:
 		return AuthFileSet{}, false
 	}

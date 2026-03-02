@@ -168,8 +168,20 @@ func getTracePaths(agent string, noProjects bool, extraPaths []string) ([]string
 			filepath.Join(homeDir, ".gemini"),
 		}
 
+	case "opencode":
+		dataHome := os.Getenv("XDG_DATA_HOME")
+		if dataHome == "" {
+			dataHome = filepath.Join(homeDir, ".local", "share")
+		}
+		paths = []string{filepath.Join(dataHome, "opencode")}
+
+	case "cursor":
+		paths = []string{
+			filepath.Join(homeDir, ".cursor"),
+		}
+
 	default:
-		return nil, fmt.Errorf("unsupported agent: %s (supported: claude, codex, gemini)", agent)
+		return nil, fmt.Errorf("unsupported agent: %s (supported: claude, codex, gemini, opencode, cursor)", agent)
 	}
 
 	// Add extra paths

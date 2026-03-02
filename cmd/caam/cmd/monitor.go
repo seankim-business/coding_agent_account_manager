@@ -76,7 +76,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 
 	// Default providers
 	if len(providers) == 0 {
-		providers = []string{"claude", "codex", "gemini"}
+		providers = []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	}
 
 	// Create renderer based on format

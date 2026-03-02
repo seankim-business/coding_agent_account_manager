@@ -22,6 +22,10 @@ func ExtractIdentity(tool Tool, authPath string) (string, bool) {
 		return extractCodexIdentity(data)
 	case ToolGemini:
 		return extractGeminiIdentity(data)
+	case ToolOpenCode:
+		return extractGenericJSONIdentity(data)
+	case ToolCursor:
+		return extractGenericJSONIdentity(data)
 	default:
 		return "", false
 	}
@@ -141,6 +145,45 @@ func extractGeminiIdentity(data []byte) (string, bool) {
 	}
 
 	// Valid settings file but couldn't extract identity
+	return "", true
+}
+
+// extractGenericJSONIdentity parses a generic JSON auth file for identity info.
+// Used for newer tools (OpenCode, Cursor) that may store email/account in various fields.
+func extractGenericJSONIdentity(data []byte) (string, bool) {
+	var auth map[string]interface{}
+	if err := json.Unmarshal(data, &auth); err != nil {
+		return "", false
+	}
+
+	// Check common identity fields
+	for _, field := range []string{"email", "account", "user_email", "accountId", "user_id"} {
+		if val, ok := auth[field].(string); ok && val != "" {
+			return val, true
+		}
+	}
+
+	// Check nested user object
+	if user, ok := auth["user"].(map[string]interface{}); ok {
+		if email, ok := user["email"].(string); ok && email != "" {
+			return email, true
+		}
+		if name, ok := user["name"].(string); ok && name != "" {
+			return name, true
+		}
+	}
+
+	// Check for JWT tokens
+	tokenFields := []string{"access_token", "accessToken", "token", "id_token"}
+	for _, field := range tokenFields {
+		if token, ok := auth[field].(string); ok && token != "" {
+			if email := extractEmailFromJWT(token); email != "" {
+				return email, true
+			}
+		}
+	}
+
+	// Valid auth file but couldn't extract identity
 	return "", true
 }
 

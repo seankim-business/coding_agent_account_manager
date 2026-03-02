@@ -10,14 +10,16 @@ import (
 
 func TestAllTools(t *testing.T) {
 	tools := AllTools()
-	if len(tools) != 3 {
-		t.Errorf("AllTools() returned %d tools, want 3", len(tools))
+	if len(tools) != 5 {
+		t.Errorf("AllTools() returned %d tools, want 5", len(tools))
 	}
 
 	expected := map[Tool]bool{
-		ToolClaude: true,
-		ToolCodex:  true,
-		ToolGemini: true,
+		ToolClaude:   true,
+		ToolCodex:    true,
+		ToolGemini:   true,
+		ToolOpenCode: true,
+		ToolCursor:   true,
 	}
 
 	for _, tool := range tools {

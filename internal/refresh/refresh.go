@@ -65,6 +65,9 @@ func RefreshProfile(ctx context.Context, provider, profile string, vault *authfi
 		err = refreshCodex(ctx, vaultPath)
 	case "gemini":
 		err = refreshGemini(ctx, provider, profile, store, vaultPath)
+	case "opencode", "cursor":
+		// Token refresh not yet supported for these providers
+		return nil
 	default:
 		return &UnsupportedError{Provider: provider, Reason: "provider not supported"}
 	}

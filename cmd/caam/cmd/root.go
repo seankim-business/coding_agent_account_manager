@@ -29,7 +29,9 @@ import (
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/provider"
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/provider/claude"
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/provider/codex"
+	cursorprovider "github.com/Dicklesworthstone/coding_agent_account_manager/internal/provider/cursor"
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/provider/gemini"
+	opencodeprovider "github.com/Dicklesworthstone/coding_agent_account_manager/internal/provider/opencode"
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/tui"
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/version"
 	"github.com/Dicklesworthstone/coding_agent_account_manager/internal/warnings"
@@ -50,9 +52,11 @@ var (
 
 // Tools supported for auth file swapping
 var tools = map[string]func() authfile.AuthFileSet{
-	"codex":  authfile.CodexAuthFiles,
-	"claude": authfile.ClaudeAuthFiles,
-	"gemini": authfile.GeminiAuthFiles,
+	"codex":    authfile.CodexAuthFiles,
+	"claude":   authfile.ClaudeAuthFiles,
+	"gemini":   authfile.GeminiAuthFiles,
+	"opencode": authfile.OpenCodeAuthFiles,
+	"cursor":   authfile.CursorAuthFiles,
 }
 
 // getDB returns the global database connection, initializing it if necessary.
@@ -88,9 +92,11 @@ When you hit usage limits on one account, switch to another in under a second:
 No browser flows, no waiting. Just instant auth file swapping.
 
 Supported tools:
-  - codex   (OpenAI Codex CLI / GPT Pro)
-  - claude  (Anthropic Claude Code / Claude Max)
-  - gemini  (Google Gemini CLI / Gemini Ultra)
+  - codex    (OpenAI Codex CLI / GPT Pro)
+  - claude   (Anthropic Claude Code / Claude Max)
+  - gemini   (Google Gemini CLI / Gemini Ultra)
+  - opencode (OpenCode)
+  - cursor   (Cursor CLI)
 
 Advanced: Profile isolation for simultaneous sessions:
   caam profile add codex work
@@ -124,6 +130,8 @@ Run 'caam' without arguments to launch the interactive TUI.`,
 		registry.Register(codex.New())
 		registry.Register(claude.New())
 		registry.Register(gemini.New())
+		registry.Register(opencodeprovider.New())
+		registry.Register(cursorprovider.New())
 
 		// Initialize runner
 		runner = exec.NewRunner(registry)
@@ -293,6 +301,26 @@ func getVaultIdentity(tool, profileName string) *identity.Identity {
 		}
 		for _, path := range candidates {
 			id, err := identity.ExtractFromGeminiConfig(path)
+			if err != nil {
+				continue
+			}
+			normalizeIdentityPlan(id)
+			return id
+		}
+	case "opencode":
+		id, err := identity.ExtractFromGenericAuth(filepath.Join(vaultPath, "auth.json"))
+		if err != nil {
+			return nil
+		}
+		normalizeIdentityPlan(id)
+		return id
+	case "cursor":
+		candidates := []string{
+			filepath.Join(vaultPath, "auth.json"),
+			filepath.Join(vaultPath, "settings.json"),
+		}
+		for _, path := range candidates {
+			id, err := identity.ExtractFromGenericAuth(path)
 			if err != nil {
 				continue
 			}

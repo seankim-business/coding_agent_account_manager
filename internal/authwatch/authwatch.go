@@ -144,7 +144,7 @@ func (t *Tracker) Capture(provider string) (*AuthState, error) {
 // CaptureAll captures auth states for all providers.
 // Returns partial results and the last error encountered, if any.
 func (t *Tracker) CaptureAll() (map[string]*AuthState, error) {
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	results := make(map[string]*AuthState)
 	var lastErr error
 
@@ -216,7 +216,7 @@ func (t *Tracker) DetectChange(provider string) (*Change, error) {
 // DetectAllChanges checks all providers for changes.
 // Returns detected changes and the last error encountered, if any.
 func (t *Tracker) DetectAllChanges() ([]Change, error) {
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	var changes []Change
 	var lastErr error
 
@@ -384,7 +384,7 @@ func (t *Tracker) GetStatus(provider string) (*AuthStatus, error) {
 
 // GetAllStatuses returns auth status for all providers.
 func (t *Tracker) GetAllStatuses() ([]*AuthStatus, error) {
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 	var statuses []*AuthStatus
 
 	for _, p := range providers {
@@ -508,16 +508,10 @@ func (t *Tracker) LoadState() error {
 
 // getFileSet returns the auth file set for a provider.
 func getFileSet(provider string) authfile.AuthFileSet {
-	switch strings.ToLower(provider) {
-	case "claude":
-		return authfile.ClaudeAuthFiles()
-	case "codex":
-		return authfile.CodexAuthFiles()
-	case "gemini":
-		return authfile.GeminiAuthFiles()
-	default:
-		return authfile.AuthFileSet{}
+	if set, ok := authfile.GetAuthFileSet(provider); ok {
+		return set
 	}
+	return authfile.AuthFileSet{}
 }
 
 // CheckUnsavedAuth is a convenience function that checks for unsaved auth.
@@ -526,7 +520,7 @@ func CheckUnsavedAuth(vault *authfile.Vault) ([]string, error) {
 	tracker := NewTracker(vault)
 
 	var unsaved []string
-	providers := []string{"claude", "codex", "gemini"}
+	providers := []string{"claude", "codex", "gemini", "opencode", "cursor"}
 
 	for _, p := range providers {
 		status, err := tracker.GetStatus(p)

@@ -316,6 +316,9 @@ func loadExpiryInfo(tool, profile string) (*health.ExpiryInfo, error) {
 		// Migrate legacy vault filename before reading.
 		_ = authfile.MigrateGeminiVaultDir(vaultPath)
 		return health.ParseGeminiExpiry(vaultPath)
+	case "opencode", "cursor":
+		// No token expiry parsing for opencode/cursor yet
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("refresh not supported for tool: %s", tool)
 	}

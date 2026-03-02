@@ -243,6 +243,10 @@ func runToolLogin(ctx context.Context, tool string, deviceCode bool) error {
 	case "gemini":
 		// Gemini uses interactive login
 		cmd = execCommand(ctx, "gemini")
+	case "opencode":
+		cmd = execCommand(ctx, "opencode")
+	case "cursor":
+		cmd = execCommand(ctx, "cursor")
 	default:
 		return fmt.Errorf("unsupported tool: %s", tool)
 	}

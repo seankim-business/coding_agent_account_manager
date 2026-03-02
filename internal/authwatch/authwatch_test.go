@@ -140,8 +140,8 @@ func TestCaptureAll(t *testing.T) {
 	}
 
 	// Should have entries for all providers
-	if len(states) != 3 {
-		t.Errorf("expected 3 states, got %d", len(states))
+	if len(states) != 5 {
+		t.Errorf("expected 5 states, got %d", len(states))
 	}
 }
 
@@ -926,8 +926,8 @@ func TestGetAllStatuses(t *testing.T) {
 		t.Fatalf("GetAllStatuses failed: %v", err)
 	}
 
-	if len(statuses) != 3 {
-		t.Errorf("expected 3 statuses, got %d", len(statuses))
+	if len(statuses) != 5 {
+		t.Errorf("expected 5 statuses, got %d", len(statuses))
 	}
 
 	// Find codex status

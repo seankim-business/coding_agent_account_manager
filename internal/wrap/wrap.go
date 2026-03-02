@@ -473,16 +473,7 @@ func (t *teeWriter) Flush() {
 
 // AuthFileSetForProvider allows mocking auth file set lookup in tests
 var AuthFileSetForProvider = func(provider string) (authfile.AuthFileSet, bool) {
-	switch provider {
-	case "codex":
-		return authfile.CodexAuthFiles(), true
-	case "claude":
-		return authfile.ClaudeAuthFiles(), true
-	case "gemini":
-		return authfile.GeminiAuthFiles(), true
-	default:
-		return authfile.AuthFileSet{}, false
-	}
+	return authfile.GetAuthFileSet(provider)
 }
 
 // binForProvider returns the binary name for a provider.
@@ -494,6 +485,10 @@ func binForProvider(provider string) string {
 		return "claude"
 	case "gemini":
 		return "gemini"
+	case "opencode":
+		return "opencode"
+	case "cursor":
+		return "cursor"
 	default:
 		return provider
 	}

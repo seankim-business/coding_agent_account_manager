@@ -597,6 +597,10 @@ func printDetectReport(report *DetectReport, verbose bool) {
 					fmt.Printf("  %s: Run 'codex login'\n", agent.Name)
 				case "gemini":
 					fmt.Printf("  %s: Run 'gemini' and select Login with Google\n", agent.Name)
+				case "opencode":
+					fmt.Printf("  %s: Run 'opencode' and follow login prompts\n", agent.Name)
+				case "cursor":
+					fmt.Printf("  %s: Run 'cursor' and sign in\n", agent.Name)
 				default:
 					fmt.Printf("  %s: See tool documentation for login\n", agent.Name)
 				}

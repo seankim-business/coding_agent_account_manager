@@ -141,10 +141,10 @@ var (
 func runWeztermLoginAll(cmd *cobra.Command, args []string) error {
 	tool := strings.ToLower(strings.TrimSpace(args[0]))
 	switch tool {
-	case "claude", "codex", "gemini":
+	case "claude", "codex", "gemini", "opencode", "cursor":
 		// ok
 	default:
-		return fmt.Errorf("unknown tool: %s (supported: claude, codex, gemini)", tool)
+		return fmt.Errorf("unknown tool: %s (supported: claude, codex, gemini, opencode, cursor)", tool)
 	}
 
 	if _, err := weztermLookupFunc("wezterm"); err != nil {
