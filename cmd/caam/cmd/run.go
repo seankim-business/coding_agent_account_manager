@@ -276,6 +276,9 @@ func runWrap(cmd *cobra.Command, args []string) error {
 	var exitErr *exec.ExitCodeError
 	if errors.As(err, &exitErr) {
 		// Clean up before exiting - os.Exit() bypasses defers
+		if prof != nil {
+			prof.Unlock()
+		}
 		if db != nil {
 			db.Close()
 		}

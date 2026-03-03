@@ -120,6 +120,14 @@ func (r *SmartRunner) Run(ctx context.Context, opts RunOptions) (err error) {
 		return r.Runner.Run(ctx, opts)
 	}
 
+	// Claude Code is a full TUI application that manages its own terminal.
+	// Running it inside a PTY wrapper causes it to hang because the nested
+	// PTY conflicts with Claude's own terminal handling. Fall back to the
+	// basic runner which connects stdio directly.
+	if opts.Provider.ID() == "claude" {
+		return r.Runner.Run(ctx, opts)
+	}
+
 	r.currentProfile = opts.Profile.Name
 
 	// Log activation event
